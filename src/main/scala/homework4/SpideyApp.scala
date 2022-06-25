@@ -8,6 +8,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
 
+import homework4.generic.{GenericSpidey, GenericAsyncHttpClient}
+import homework4.concurrent.IO
+
 case class SpideyAppInput(url: String, maxDepth: Int, spider: ProcessingSpider)
 
 object NonNegativeInteger:
@@ -15,11 +18,11 @@ object NonNegativeInteger:
     Try(integerString.toInt).toOption.filter(_ >= 0)
 
 object SpideyApp:
-  given ExecutionContext = ExecutionContext.fromExecutor(new ForkJoinPool)
+  given ec: ExecutionContext = ExecutionContext.fromExecutor(new ForkJoinPool)
   val blockingExecutionContext: ExecutionContext = ExecutionContext.fromExecutor(new ForkJoinPool(4))
 
-  val httpClient = new AsyncHttpClient
-  val spidey = new Spidey(httpClient)
+  val httpClient = new GenericAsyncHttpClient
+  val spidey = new GenericSpidey[IO](httpClient)
 
   val defaultConfig = SpideyConfig(
     maxDepth = 0,
@@ -64,7 +67,7 @@ object SpideyApp:
       case Some(SpideyAppInput(url, maxDepth, spider)) =>
         val eventualOutput = spider.process(spidey, url, maxDepth)(defaultConfig)
 
-        val output = Await.result(eventualOutput, Duration.Inf)
+        val output = Await.result(eventualOutput.unsafeRunToFuture(ec), Duration.Inf)
 
         println("Spidey retrieved the following results:\n")
         println(output)

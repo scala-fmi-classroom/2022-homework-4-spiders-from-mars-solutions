@@ -8,6 +8,9 @@ trait Monoid[M]:
 object Monoid:
   def apply[A](using m: Monoid[A]): Monoid[A] = m
 
+  def sum[A: Monoid](xs: List[A]): A =
+    xs.fold(Monoid[A].identity)(_ |+| _)
+
   given Monoid[Int] with
     extension (a: Int) def |+|(b: Int): Int = a + b
     val identity: Int = 0

@@ -25,6 +25,8 @@ trait HttpResponse:
   def isClientError: Boolean = 400 <= status && status < 500
   def isServerError: Boolean = 500 <= status && status < 600
 
+  def isNotFound: Boolean = status == 404
+
 case class ContentType(mimeType: String, charset: Option[Charset] = None)
 
 object ContentType:
